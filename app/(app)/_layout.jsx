@@ -1,18 +1,18 @@
 import { Tabs, router } from 'expo-router'
 import { useSelector } from 'react-redux'
 import { useEffect } from 'react'
-import { FileText, LayoutDashboard, Briefcase, ClipboardList, User } from 'lucide-react-native'
+import { LayoutDashboard, User } from 'lucide-react-native'
 
 export default function AppLayout() {
-  const { user, token } = useSelector(state => state.auth)
+  const { token, loading } = useSelector(state => state.auth)
 
   useEffect(() => {
-    if (!token) {
+    if (!loading && !token) {
       router.replace('/(auth)/login')
     }
-  }, [token])
+  }, [token, loading])
 
-  if (!token) return null
+  if (loading || !token) return null
 
   return (
     <Tabs
@@ -35,10 +35,7 @@ export default function AppLayout() {
       />
       <Tabs.Screen
         name="applied"
-        options={{
-          title: 'Applied',
-          tabBarIcon: ({ color, size }) => <ClipboardList color={color} size={size} />,
-        }}
+        options={{ href: null }}
       />
       <Tabs.Screen
         name="profile"

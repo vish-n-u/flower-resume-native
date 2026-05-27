@@ -4,10 +4,10 @@ import { Camera, User } from 'lucide-react-native'
 import FormField from './FormField'
 
 export default function PersonalInfoForm({ data, onChange }) {
-  const info = data?.personalInfo || {}
+  const info = data?.personal_info || {}
 
   const update = (field, value) => {
-    onChange({ personalInfo: { ...info, [field]: value } })
+    onChange({ personal_info: { ...info, [field]: value } })
   }
 
   const pickProfileImage = async () => {
@@ -18,7 +18,7 @@ export default function PersonalInfoForm({ data, onChange }) {
       quality: 0.8,
     })
     if (!result.canceled) {
-      update('profileImage', result.assets[0].uri)
+      update('image', result.assets[0].uri)
     }
   }
 
@@ -29,9 +29,9 @@ export default function PersonalInfoForm({ data, onChange }) {
       {/* Profile picture */}
       <View className="items-center mb-6">
         <TouchableOpacity onPress={pickProfileImage} className="relative">
-          {info.profileImage ? (
+          {info.image ? (
             <Image
-              source={{ uri: info.profileImage }}
+              source={{ uri: info.image }}
               className="w-20 h-20 rounded-full bg-gray-200"
             />
           ) : (
@@ -45,13 +45,12 @@ export default function PersonalInfoForm({ data, onChange }) {
         </TouchableOpacity>
       </View>
 
-      <FormField label="Full Name" value={info.name} onChangeText={v => update('name', v)} placeholder="John Doe" />
-      <FormField label="Job Title" value={info.jobTitle} onChangeText={v => update('jobTitle', v)} placeholder="Software Engineer" />
+      <FormField label="Full Name" value={info.full_name} onChangeText={v => update('full_name', v)} placeholder="John Doe" />
+      <FormField label="Profession" value={info.profession} onChangeText={v => update('profession', v)} placeholder="Software Engineer" />
       <FormField label="Email" value={info.email} onChangeText={v => update('email', v)} placeholder="john@example.com" keyboardType="email-address" />
       <FormField label="Phone" value={info.phone} onChangeText={v => update('phone', v)} placeholder="+1 234 567 8900" keyboardType="phone-pad" />
       <FormField label="Location" value={info.location} onChangeText={v => update('location', v)} placeholder="New York, NY" />
       <FormField label="LinkedIn" value={info.linkedin} onChangeText={v => update('linkedin', v)} placeholder="linkedin.com/in/yourname" />
-      <FormField label="GitHub" value={info.github} onChangeText={v => update('github', v)} placeholder="github.com/yourname" />
       <FormField label="Portfolio / Website" value={info.website} onChangeText={v => update('website', v)} placeholder="yoursite.com" />
     </View>
   )

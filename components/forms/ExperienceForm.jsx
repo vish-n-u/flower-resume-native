@@ -4,8 +4,8 @@ import { useState } from 'react'
 import FormField from './FormField'
 
 const EMPTY_ENTRY = {
-  company: '', jobTitle: '', startDate: '', endDate: '',
-  currentlyWorking: false, description: '',
+  company: '', position: '', start_date: '', end_date: '',
+  is_current: false, description: '',
 }
 
 export default function ExperienceForm({ data, onChange }) {
@@ -48,7 +48,7 @@ export default function ExperienceForm({ data, onChange }) {
           >
             <View className="flex-1">
               <Text className="font-medium text-gray-900" numberOfLines={1}>
-                {entry.jobTitle || 'New Position'}
+                {entry.position || 'New Position'}
               </Text>
               <Text className="text-sm text-gray-500" numberOfLines={1}>
                 {entry.company || 'Company'}
@@ -63,14 +63,14 @@ export default function ExperienceForm({ data, onChange }) {
           {expanded === index && (
             <View className="px-4 pb-4 border-t border-gray-100">
               <View className="h-3" />
-              <FormField label="Job Title" value={entry.jobTitle} onChangeText={v => update(index, 'jobTitle', v)} placeholder="Software Engineer" />
+              <FormField label="Position" value={entry.position} onChangeText={v => update(index, 'position', v)} placeholder="Software Engineer" />
               <FormField label="Company" value={entry.company} onChangeText={v => update(index, 'company', v)} placeholder="Acme Corp" />
               <View className="flex-row gap-3">
                 <View className="flex-1">
-                  <FormField label="Start Date" value={entry.startDate} onChangeText={v => update(index, 'startDate', v)} placeholder="Jan 2022" />
+                  <FormField label="Start Date" value={entry.start_date} onChangeText={v => update(index, 'start_date', v)} placeholder="Jan 2022" />
                 </View>
                 <View className="flex-1">
-                  <FormField label="End Date" value={entry.endDate} onChangeText={v => update(index, 'endDate', v)} placeholder="Present" />
+                  <FormField label="End Date" value={entry.end_date} onChangeText={v => update(index, 'end_date', v)} placeholder="Present" />
                 </View>
               </View>
               <FormField label="Description" value={entry.description} onChangeText={v => update(index, 'description', v)} placeholder="Describe your responsibilities and achievements..." multiline numberOfLines={5} />

@@ -7,8 +7,8 @@ export default function ProfessionalSummaryForm({ data, onChange }) {
       <Text className="text-base font-bold text-gray-900 mb-4">Professional Summary</Text>
       <FormField
         label="Summary"
-        value={data?.summary}
-        onChangeText={v => onChange({ summary: v })}
+        value={data?.professional_summary}
+        onChangeText={v => onChange({ professional_summary: v })}
         placeholder="Write a brief summary about yourself, your experience, and what you bring to the table..."
         multiline
         numberOfLines={6}

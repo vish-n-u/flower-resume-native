@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity } from 'react-native'
 import { Plus, Trash2 } from 'lucide-react-native'
 import FormField from './FormField'
 
-const EMPTY = { name: '', issuer: '', date: '', credentialId: '' }
+const EMPTY = { name: '', issuer: '', date: '', credential_id: '' }
 
 export default function CertificationsForm({ data, onChange }) {
   const entries = data?.certifications || []
@@ -40,7 +40,7 @@ export default function CertificationsForm({ data, onChange }) {
               <FormField label="Date" value={entry.date} onChangeText={v => update(index, 'date', v)} placeholder="Mar 2024" />
             </View>
             <View className="flex-1">
-              <FormField label="Credential ID" value={entry.credentialId} onChangeText={v => update(index, 'credentialId', v)} placeholder="ABC123" />
+              <FormField label="Credential ID" value={entry.credential_id} onChangeText={v => update(index, 'credential_id', v)} placeholder="ABC123" />
             </View>
           </View>
         </View>
