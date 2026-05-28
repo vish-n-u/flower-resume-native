@@ -4,7 +4,7 @@ import {
   ActivityIndicator, Modal, Share, KeyboardAvoidingView, Platform
 } from 'react-native'
 import * as Print from 'expo-print'
-import * as Sharing from 'expo-sharing'
+import * as FileSystem from 'expo-file-system'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useSelector } from 'react-redux'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -17,6 +17,7 @@ import {
   AlertCircle, Clock, MapPin, Download
 } from 'lucide-react-native'
 import api, { API_BASE_URL } from '@configs/api'
+import generateResumeHTML from '@utils/generateResumeHTML'
 import ResumeWebView from '@components/resume/ResumeWebView'
 import PersonalInfoForm from '@components/forms/PersonalInfoForm'
 import ExperienceForm from '@components/forms/ExperienceForm'
@@ -86,7 +87,6 @@ export default function ResumeBuilder() {
 
   const saveTimer = useRef(null)
   const isInitialLoad = useRef(true)
-  const webViewRef = useRef(null)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
 
   // ─── Load resume ───────────────────────────────────────────────────────────
@@ -182,23 +182,39 @@ export default function ResumeBuilder() {
   }
 
   // ─── PDF Download ────────────────────────────────────────────────────────
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
     if (downloadingPdf) return
     setDownloadingPdf(true)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    webViewRef.current?.captureHTML()
-  }
-
-  const handleHTMLCapture = async (html) => {
     try {
+      const html = generateResumeHTML(resumeData)
       const { uri } = await Print.printToFileAsync({ html, base64: false })
-      await Sharing.shareAsync(uri, {
-        mimeType: 'application/pdf',
-        dialogTitle: `${resumeData?.title || 'Resume'}.pdf`,
-        UTI: 'com.adobe.pdf',
-      })
+      const fileName = `${resumeData?.title || 'Resume'}.pdf`
+
+      if (Platform.OS === 'android') {
+        const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync()
+        if (!permissions.granted) return
+        const base64 = await FileSystem.readAsStringAsync(uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        })
+        const savedUri = await FileSystem.StorageAccessFramework.createFileAsync(
+          permissions.directoryUri,
+          fileName,
+          'application/pdf'
+        )
+        await FileSystem.writeAsStringAsync(savedUri, base64, {
+          encoding: FileSystem.EncodingType.Base64,
+        })
+      } else {
+        const destUri = `${FileSystem.documentDirectory}${fileName}`
+        const info = await FileSystem.getInfoAsync(destUri)
+        if (info.exists) await FileSystem.deleteAsync(destUri)
+        await FileSystem.copyAsync({ from: uri, to: destUri })
+      }
+
+      Toast.show({ type: 'success', text1: 'PDF saved!' })
     } catch (err) {
-      Toast.show({ type: 'error', text1: 'PDF generation failed' })
+      Toast.show({ type: 'error', text1: 'PDF save failed', text2: err?.message })
     } finally {
       setDownloadingPdf(false)
     }
@@ -452,11 +468,7 @@ export default function ResumeBuilder() {
               </Text>
             </TouchableOpacity>
           </View>
-          <ResumeWebView
-            ref={webViewRef}
-            resumeId={resumeId}
-            onHTMLCapture={handleHTMLCapture}
-          />
+          <ResumeWebView resumeData={resumeData} />
         </SafeAreaView>
       </Modal>
 
