@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity } from 'react-native'
 import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react-native'
 import { useState } from 'react'
 import FormField from './FormField'
+import RichTextInput from './RichTextInput'
 
 const EMPTY = { title: '', description: '', tech_stack: '', link: '' }
 
@@ -51,7 +52,13 @@ export default function ProjectForm({ data, onChange }) {
               <FormField label="Project Title" value={entry.title} onChangeText={v => update(index, 'title', v)} placeholder="My Awesome App" />
               <FormField label="Tech Stack" value={entry.tech_stack} onChangeText={v => update(index, 'tech_stack', v)} placeholder="React Native, Node.js, MongoDB" />
               <FormField label="Link" value={entry.link} onChangeText={v => update(index, 'link', v)} placeholder="github.com/you/project" />
-              <FormField label="Description" value={entry.description} onChangeText={v => update(index, 'description', v)} placeholder="What does this project do?" multiline numberOfLines={4} />
+              <RichTextInput
+                label="Description"
+                value={entry.description}
+                onChange={v => update(index, 'description', v)}
+                placeholder="What does this project do?"
+                minHeight={100}
+              />
             </View>
           )}
         </View>

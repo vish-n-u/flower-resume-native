@@ -1,7 +1,8 @@
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
+import { View, Text, TouchableOpacity } from 'react-native'
 import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react-native'
 import { useState } from 'react'
 import FormField from './FormField'
+import RichTextInput from './RichTextInput'
 
 const EMPTY_ENTRY = {
   company: '', position: '', start_date: '', end_date: '',
@@ -73,7 +74,13 @@ export default function ExperienceForm({ data, onChange }) {
                   <FormField label="End Date" value={entry.end_date} onChangeText={v => update(index, 'end_date', v)} placeholder="Present" />
                 </View>
               </View>
-              <FormField label="Description" value={entry.description} onChangeText={v => update(index, 'description', v)} placeholder="Describe your responsibilities and achievements..." multiline numberOfLines={5} />
+              <RichTextInput
+                label="Description"
+                value={entry.description}
+                onChange={v => update(index, 'description', v)}
+                placeholder="Describe your responsibilities and achievements..."
+                minHeight={120}
+              />
             </View>
           )}
         </View>

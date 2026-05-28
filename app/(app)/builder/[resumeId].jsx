@@ -3,15 +3,18 @@ import {
   View, Text, TouchableOpacity, ScrollView, TextInput,
   ActivityIndicator, Modal, Share, KeyboardAvoidingView, Platform
 } from 'react-native'
+import * as Print from 'expo-print'
+import * as Sharing from 'expo-sharing'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useSelector } from 'react-redux'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import * as Haptics from 'expo-haptics'
 import Toast from 'react-native-toast-message'
 import {
   ArrowLeft, User, Briefcase, GraduationCap, FolderOpen,
   Wrench, Award, Trophy, Eye, EyeOff, Palette, Settings,
   Share2, Sparkles, Globe, Lock, X, FileText, CheckCircle,
-  AlertCircle, Clock, MapPin
+  AlertCircle, Clock, MapPin, Download
 } from 'lucide-react-native'
 import api, { API_BASE_URL } from '@configs/api'
 import ResumeWebView from '@components/resume/ResumeWebView'
@@ -57,6 +60,7 @@ const DEFAULT_VISIBILITY = {
 export default function ResumeBuilder() {
   const { resumeId } = useLocalSearchParams()
   const { token } = useSelector(state => state.auth)
+  const insets = useSafeAreaInsets()
 
   const [resumeData, setResumeData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -82,6 +86,8 @@ export default function ResumeBuilder() {
 
   const saveTimer = useRef(null)
   const isInitialLoad = useRef(true)
+  const webViewRef = useRef(null)
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
 
   // ─── Load resume ───────────────────────────────────────────────────────────
   const fetchResume = async () => {
@@ -122,6 +128,7 @@ export default function ResumeBuilder() {
         headers: { Authorization: token, 'Content-Type': 'multipart/form-data' },
       })
       setAutoSaveStatus('saved')
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       setTimeout(() => setAutoSaveStatus(''), 2000)
     } catch {
       setAutoSaveStatus('')
@@ -135,6 +142,7 @@ export default function ResumeBuilder() {
   // ─── Section visibility ────────────────────────────────────────────────────
   const toggleSectionVisibility = (visKey) => {
     if (!visKey) return
+    Haptics.selectionAsync()
     updateResumeData({
       sectionVisibility: {
         ...resumeData.sectionVisibility,
@@ -150,6 +158,7 @@ export default function ResumeBuilder() {
 
   // ─── Public / private ──────────────────────────────────────────────────────
   const togglePublic = async () => {
+    Haptics.selectionAsync()
     try {
       const newPublic = !resumeData.public
       const formData = new FormData()
@@ -170,6 +179,29 @@ export default function ResumeBuilder() {
     try {
       await Share.share({ url: `${API_BASE_URL}/view/${resumeId}` })
     } catch {}
+  }
+
+  // ─── PDF Download ────────────────────────────────────────────────────────
+  const downloadPDF = () => {
+    if (downloadingPdf) return
+    setDownloadingPdf(true)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    webViewRef.current?.captureHTML()
+  }
+
+  const handleHTMLCapture = async (html) => {
+    try {
+      const { uri } = await Print.printToFileAsync({ html, base64: false })
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: `${resumeData?.title || 'Resume'}.pdf`,
+        UTI: 'com.adobe.pdf',
+      })
+    } catch (err) {
+      Toast.show({ type: 'error', text1: 'PDF generation failed' })
+    } finally {
+      setDownloadingPdf(false)
+    }
   }
 
   // ─── AI Custom Prompt ──────────────────────────────────────────────────────
@@ -289,7 +321,8 @@ export default function ResumeBuilder() {
             <Settings color="#6b7280" size={20} />
           </TouchableOpacity>
           <TouchableOpacity
-            className="bg-indigo-600 rounded-lg px-3 py-1.5 flex-row items-center gap-1"
+            className="rounded-lg px-3 py-1.5 flex-row items-center gap-1"
+            style={{ backgroundColor: '#f59e0b' }}
             onPress={() => setPreviewVisible(true)}
           >
             <Eye color="#fff" size={16} />
@@ -352,7 +385,7 @@ export default function ResumeBuilder() {
       </ScrollView>
 
       {/* ── FAB (AI actions) ── */}
-      <View className="absolute bottom-6 right-4" style={{ zIndex: 30 }}>
+      <View style={{ position: 'absolute', bottom: insets.bottom + 16, right: 16, zIndex: 30 }}>
         {fabOpen && (
           <>
             <TouchableOpacity
@@ -403,9 +436,27 @@ export default function ResumeBuilder() {
             <TouchableOpacity onPress={() => setPreviewVisible(false)} className="mr-3">
               <ArrowLeft color="#374151" size={22} />
             </TouchableOpacity>
-            <Text className="font-semibold text-gray-900">Preview</Text>
+            <Text className="flex-1 font-semibold text-gray-900">Preview</Text>
+            <TouchableOpacity
+              onPress={downloadPDF}
+              disabled={downloadingPdf}
+              className="flex-row items-center gap-1.5 rounded-lg px-3 py-1.5"
+              style={{ backgroundColor: downloadingPdf ? '#d1d5db' : '#f59e0b' }}
+            >
+              {downloadingPdf
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Download color="#fff" size={16} />
+              }
+              <Text className="text-white text-sm font-semibold">
+                {downloadingPdf ? 'Generating...' : 'Download PDF'}
+              </Text>
+            </TouchableOpacity>
           </View>
-          <ResumeWebView resumeId={resumeId} />
+          <ResumeWebView
+            ref={webViewRef}
+            resumeId={resumeId}
+            onHTMLCapture={handleHTMLCapture}
+          />
         </SafeAreaView>
       </Modal>
 
